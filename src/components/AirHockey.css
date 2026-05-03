@@ -1,0 +1,45 @@
+.game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
+  font-family: 'Inter', system-ui, sans-serif;
+  color: white;
+}
+
+.score-board {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 40px;
+  margin-bottom: 40px;
+  font-size: 3.5rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.player-score {
+  color: #38bdf8;
+  text-shadow: 0 0 20px rgba(56, 189, 248, 0.8), 0 0 40px rgba(56, 189, 248, 0.4);
+}
+
+.computer-score {
+  color: #f43f5e;
+  text-shadow: 0 0 20px rgba(244, 63, 94, 0.8), 0 0 40px rgba(244, 63, 94, 0.4);
+}
+
+.score-divider {
+  color: #64748b;
+  font-size: 2rem;
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(100, 116, 139, 0.5);
+}
+
+.game-canvas {
+  box-shadow: 0 0 40px rgba(56, 189, 248, 0.15), 0 0 80px rgba(56, 189, 248, 0.05);
+  border-radius: 16px;
+  background-color: #0f172a;
+  max-width: 95vw;
+}
