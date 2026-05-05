@@ -12,6 +12,27 @@ const AirHockey = () => {
     canvas.width = 800;
     canvas.height = 400;
     
+    const player = {
+      x: 50,
+      y: canvas.height / 2,
+      radius: 30,
+      color: '#38bdf8'
+    };
+
+    const computer = {
+      x: canvas.width - 50,
+      y: canvas.height / 2,
+      radius: 30,
+      color: '#f43f5e'
+    };
+
+    const puck = {
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      radius: 15,
+      color: '#fbbf24'
+    };
+
     const drawTable = () => {
       ctx.fillStyle = '#0f172a';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -54,8 +75,38 @@ const AirHockey = () => {
       ctx.shadowBlur = 0;
     };
 
+    const drawPaddle = (x, y, radius, color) => {
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = '#0f172a';
+      ctx.fill();
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = color;
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.arc(x, y, radius - 10, 0, Math.PI * 2);
+      ctx.stroke();
+    };
+
+    const drawPuck = () => {
+      ctx.beginPath();
+      ctx.arc(puck.x, puck.y, puck.radius, 0, Math.PI * 2);
+      ctx.fillStyle = puck.color;
+      ctx.fill();
+      
+      ctx.beginPath();
+      ctx.arc(puck.x, puck.y, puck.radius - 5, 0, Math.PI * 2);
+      ctx.strokeStyle = '#d97706';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    };
+
     const render = () => {
       drawTable();
+      drawPaddle(player.x, player.y, player.radius, player.color);
+      drawPaddle(computer.x, computer.y, computer.radius, computer.color);
+      drawPuck();
       animationFrameId = window.requestAnimationFrame(render);
     };
     
