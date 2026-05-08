@@ -42,4 +42,13 @@
   border-radius: 16px;
   background-color: #0f172a;
   max-width: 95vw;
+  cursor: none;
+}
+
+.controls-hint {
+  margin-top: 18px;
+  font-size: 0.85rem;
+  color: rgba(100, 116, 139, 0.8);
+  letter-spacing: 0.5px;
+  user-select: none;
 }
