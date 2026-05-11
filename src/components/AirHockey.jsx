@@ -8,6 +8,27 @@ const FRICTION = 0.99;
 const MIN_SPEED = 1.5;
 const MAX_SPEED = 14;
 
+const collidePuckWithPaddle = (puck, paddle) => {
+  const dx = puck.x - paddle.x;
+  const dy = puck.y - paddle.y;
+  const dist = Math.hypot(dx, dy);
+  const minDist = puck.radius + paddle.radius;
+  if (dist >= minDist || dist === 0) return;
+  const nx = dx / dist;
+  const ny = dy / dist;
+  puck.x = paddle.x + nx * minDist;
+  puck.y = paddle.y + ny * minDist;
+  const relVx = puck.vx - (paddle.vx || 0);
+  const relVy = puck.vy - (paddle.vy || 0);
+  const dot = relVx * nx + relVy * ny;
+  if (dot < 0) {
+    puck.vx -= 2 * dot * nx;
+    puck.vy -= 2 * dot * ny;
+    puck.vx += (paddle.vx || 0) * 0.5;
+    puck.vy += (paddle.vy || 0) * 0.5;
+  }
+};
+
 const AirHockey = () => {
   const canvasRef = useRef(null);
   const playerRef = useRef({ x: 50, y: CANVAS_HEIGHT / 2, radius: 30, prevX: 50, prevY: CANVAS_HEIGHT / 2, vx: 0, vy: 0 });
@@ -95,6 +116,12 @@ const AirHockey = () => {
       puck.y = CANVAS_HEIGHT - puck.radius;
       puck.vy = -Math.abs(puck.vy);
     }
+
+    collidePuckWithPaddle(puck, playerRef.current);
+    collidePuckWithPaddle(puck, computerRef.current);
+    const clamped = clampSpeed(puck.vx, puck.vy);
+    puck.vx = clamped.vx;
+    puck.vy = clamped.vy;
 
     const goalTop = CANVAS_HEIGHT / 2 - GOAL_HALF_HEIGHT;
     const goalBot = CANVAS_HEIGHT / 2 + GOAL_HALF_HEIGHT;
