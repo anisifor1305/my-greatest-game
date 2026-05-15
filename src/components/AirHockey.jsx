@@ -38,6 +38,7 @@ const AirHockey = () => {
   const [playerScore, setPlayerScore] = useState(0);
   const [computerScore, setComputerScore] = useState(0);
   const pausedRef = useRef(false);
+  const AI_SPEED = 4;
 
   const handleMouseMove = useCallback((e) => {
     const canvas = canvasRef.current;
@@ -145,6 +146,26 @@ const AirHockey = () => {
       }
     }
   }, [resetRound]);
+
+  const updateComputer = useCallback(() => {
+    if (pausedRef.current) return;
+    const comp = computerRef.current;
+    const puck = puckRef.current;
+    const r = comp.radius;
+
+    let targetY;
+    if (puck.vx > 0) {
+      targetY = puck.y;
+    } else {
+      targetY = CANVAS_HEIGHT / 2;
+    }
+
+    const dy = targetY - comp.y;
+    const step = Math.min(Math.abs(dy), AI_SPEED) * Math.sign(dy);
+    comp.y += step;
+    comp.y = Math.max(r, Math.min(CANVAS_HEIGHT - r, comp.y));
+    comp.x = Math.max(CANVAS_WIDTH / 2 + r, Math.min(CANVAS_WIDTH - r, comp.x));
+  }, []);
 
   const drawTable = (ctx) => {
     ctx.fillStyle = '#0f172a';
@@ -257,6 +278,7 @@ const AirHockey = () => {
 
     const render = () => {
       updatePuck();
+      updateComputer();
       drawTable(ctx);
       drawPaddle(ctx, playerRef.current.x, playerRef.current.y, 30, '#38bdf8');
       drawPaddle(ctx, computerRef.current.x, computerRef.current.y, 30, '#f43f5e');
@@ -274,7 +296,7 @@ const AirHockey = () => {
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('touchmove', handleTouchMove);
     };
-  }, [handleMouseMove, handleTouchMove, updatePuck]);
+  }, [handleMouseMove, handleTouchMove, updatePuck, updateComputer]);
 
   return (
     <div className="game-container">
