@@ -153,18 +153,38 @@ const AirHockey = () => {
     const puck = puckRef.current;
     const r = comp.radius;
 
+    comp.prevX = comp.x;
+    comp.prevY = comp.y;
+
+    let targetX = CANVAS_WIDTH - 50;
     let targetY;
+
     if (puck.vx > 0) {
       targetY = puck.y;
+      if (puck.x > CANVAS_WIDTH / 2) {
+        if (puck.vx < 4) {
+          targetX = puck.x;
+        } else if (puck.x > CANVAS_WIDTH - 120) {
+          targetX = puck.x;
+        }
+      }
     } else {
       targetY = CANVAS_HEIGHT / 2;
     }
 
     const dy = targetY - comp.y;
-    const step = Math.min(Math.abs(dy), AI_SPEED) * Math.sign(dy);
-    comp.y += step;
+    const stepY = Math.min(Math.abs(dy), AI_SPEED) * Math.sign(dy);
+    comp.y += stepY;
+
+    const dx = targetX - comp.x;
+    const stepX = Math.min(Math.abs(dx), AI_SPEED) * Math.sign(dx);
+    comp.x += stepX;
+
     comp.y = Math.max(r, Math.min(CANVAS_HEIGHT - r, comp.y));
     comp.x = Math.max(CANVAS_WIDTH / 2 + r, Math.min(CANVAS_WIDTH - r, comp.x));
+
+    comp.vx = comp.x - comp.prevX;
+    comp.vy = comp.y - comp.prevY;
   }, []);
 
   const drawTable = (ctx) => {
