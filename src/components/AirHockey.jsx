@@ -40,6 +40,8 @@ const AirHockey = () => {
   const pausedRef = useRef(false);
   const AI_SPEED = 4;
 
+  const targetRef = useRef({ x: 50, y: CANVAS_HEIGHT / 2 });
+
   const handleMouseMove = useCallback((e) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -47,26 +49,30 @@ const AirHockey = () => {
     const scaleX = CANVAS_WIDTH / rect.width;
     const scaleY = CANVAS_HEIGHT / rect.height;
 
+    targetRef.current.x = (e.clientX - rect.left) * scaleX;
+    targetRef.current.y = (e.clientY - rect.top) * scaleY;
+  }, []);
+
+  const handleTouchMove = useCallback((e) => {
+    const touch = e.touches[0];
+    handleMouseMove({ clientX: touch.clientX, clientY: touch.clientY });
+  }, [handleMouseMove]);
+
+  const updatePlayer = useCallback(() => {
     const player = playerRef.current;
     player.prevX = player.x;
     player.prevY = player.y;
 
-    const rawX = (e.clientX - rect.left) * scaleX;
-    const rawY = (e.clientY - rect.top) * scaleY;
-
     const r = player.radius;
-    player.x = Math.max(r, Math.min(CANVAS_WIDTH / 2 - r, rawX));
-    player.y = Math.max(r, Math.min(CANVAS_HEIGHT - r, rawY));
+    const targetX = Math.max(r, Math.min(CANVAS_WIDTH / 2 - r, targetRef.current.x));
+    const targetY = Math.max(r, Math.min(CANVAS_HEIGHT - r, targetRef.current.y));
+
+    player.x += (targetX - player.x) * 0.35;
+    player.y += (targetY - player.y) * 0.35;
 
     player.vx = player.x - player.prevX;
     player.vy = player.y - player.prevY;
   }, []);
-
-  const handleTouchMove = useCallback((e) => {
-    e.preventDefault();
-    const touch = e.touches[0];
-    handleMouseMove({ clientX: touch.clientX, clientY: touch.clientY });
-  }, [handleMouseMove]);
 
   const clampSpeed = (vx, vy) => {
     const speed = Math.hypot(vx, vy);
@@ -280,6 +286,7 @@ const AirHockey = () => {
     canvas.height = CANVAS_HEIGHT;
 
     const render = () => {
+      updatePlayer();
       updatePuck();
       updateComputer();
       drawTable(ctx);
@@ -291,15 +298,15 @@ const AirHockey = () => {
 
     render();
 
-    canvas.addEventListener('mousemove', handleMouseMove);
-    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
 
     return () => {
       cancelAnimationFrame(animationIdRef.current);
-      canvas.removeEventListener('mousemove', handleMouseMove);
-      canvas.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('touchmove', handleTouchMove);
     };
-  }, [handleMouseMove, handleTouchMove, updatePuck, updateComputer]);
+  }, [handleMouseMove, handleTouchMove, updatePlayer, updatePuck, updateComputer]);
 
   return (
     <div className="game-container">
