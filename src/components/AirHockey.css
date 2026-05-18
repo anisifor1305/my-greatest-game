@@ -4,9 +4,9 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
+  background: radial-gradient(circle at center, #ffffff 0%, #f1f5f9 100%);
   font-family: 'Inter', system-ui, sans-serif;
-  color: white;
+  color: #0f172a;
 }
 
 .score-board {
@@ -21,26 +21,23 @@
 }
 
 .player-score {
-  color: #38bdf8;
-  text-shadow: 0 0 20px rgba(56, 189, 248, 0.8), 0 0 40px rgba(56, 189, 248, 0.4);
+  color: #2563eb;
 }
 
 .computer-score {
-  color: #f43f5e;
-  text-shadow: 0 0 20px rgba(244, 63, 94, 0.8), 0 0 40px rgba(244, 63, 94, 0.4);
+  color: #e11d48;
 }
 
 .score-divider {
-  color: #64748b;
+  color: #94a3b8;
   font-size: 2rem;
   font-weight: 700;
-  text-shadow: 0 0 10px rgba(100, 116, 139, 0.5);
 }
 
 .game-canvas {
-  box-shadow: 0 0 40px rgba(56, 189, 248, 0.15), 0 0 80px rgba(56, 189, 248, 0.05);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.05);
   border-radius: 16px;
-  background-color: #0f172a;
+  background-color: #ffffff;
   max-width: 95vw;
   cursor: none;
 }
@@ -48,7 +45,7 @@
 .controls-hint {
   margin-top: 18px;
   font-size: 0.85rem;
-  color: rgba(100, 116, 139, 0.8);
+  color: #64748b;
   letter-spacing: 0.5px;
   user-select: none;
 }

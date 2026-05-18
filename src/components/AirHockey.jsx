@@ -188,20 +188,18 @@ const AirHockey = () => {
   }, []);
 
   const drawTable = (ctx) => {
-    ctx.fillStyle = '#0f172a';
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
     ctx.save();
-    ctx.shadowBlur = 18;
-    ctx.shadowColor = '#38bdf8';
-    ctx.strokeStyle = '#38bdf8';
+    ctx.strokeStyle = '#cbd5e1';
     ctx.lineWidth = 6;
     ctx.strokeRect(3, 3, CANVAS_WIDTH - 6, CANVAS_HEIGHT - 6);
     ctx.restore();
 
     ctx.save();
-    ctx.setLineDash([12, 10]);
-    ctx.strokeStyle = 'rgba(56,189,248,0.35)';
+    ctx.setLineDash([8, 8]);
+    ctx.strokeStyle = '#cbd5e1';
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.moveTo(CANVAS_WIDTH / 2, 0);
@@ -211,10 +209,8 @@ const AirHockey = () => {
     ctx.restore();
 
     ctx.save();
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = 'rgba(56,189,248,0.5)';
-    ctx.strokeStyle = 'rgba(56,189,248,0.4)';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.arc(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, 60, 0, Math.PI * 2);
     ctx.stroke();
@@ -224,17 +220,19 @@ const AirHockey = () => {
     const goalBot = CANVAS_HEIGHT / 2 + GOAL_HALF_HEIGHT;
 
     ctx.save();
-    ctx.shadowBlur = 16;
-    ctx.shadowColor = '#f43f5e';
-    ctx.strokeStyle = '#f43f5e';
+    ctx.strokeStyle = '#3b82f6';
     ctx.lineWidth = 7;
     ctx.lineCap = 'round';
-
     ctx.beginPath();
     ctx.moveTo(3, goalTop);
     ctx.lineTo(3, goalBot);
     ctx.stroke();
+    ctx.restore();
 
+    ctx.save();
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 7;
+    ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.moveTo(CANVAS_WIDTH - 3, goalTop);
     ctx.lineTo(CANVAS_WIDTH - 3, goalBot);
@@ -244,26 +242,21 @@ const AirHockey = () => {
 
   const drawPaddle = (ctx, x, y, radius, color) => {
     ctx.save();
-    ctx.shadowBlur = 20;
-    ctx.shadowColor = color;
 
     ctx.beginPath();
     ctx.arc(x, y, radius, 0, Math.PI * 2);
-    ctx.fillStyle = '#0f172a';
-    ctx.fill();
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 4;
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(x, y, radius - 10, 0, Math.PI * 2);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(x, y, 4, 0, Math.PI * 2);
     ctx.fillStyle = color;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(x, y, radius - 8, 0, Math.PI * 2);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(x, y, 5, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
     ctx.fill();
 
     ctx.restore();
@@ -272,20 +265,10 @@ const AirHockey = () => {
   const drawPuck = (ctx) => {
     const puck = puckRef.current;
     ctx.save();
-    ctx.shadowBlur = 22;
-    ctx.shadowColor = '#fbbf24';
-
     ctx.beginPath();
     ctx.arc(puck.x, puck.y, puck.radius, 0, Math.PI * 2);
-    ctx.fillStyle = '#fbbf24';
+    ctx.fillStyle = '#0f172a';
     ctx.fill();
-
-    ctx.beginPath();
-    ctx.arc(puck.x, puck.y, puck.radius - 5, 0, Math.PI * 2);
-    ctx.strokeStyle = '#d97706';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
     ctx.restore();
   };
 
@@ -300,8 +283,8 @@ const AirHockey = () => {
       updatePuck();
       updateComputer();
       drawTable(ctx);
-      drawPaddle(ctx, playerRef.current.x, playerRef.current.y, 30, '#38bdf8');
-      drawPaddle(ctx, computerRef.current.x, computerRef.current.y, 30, '#f43f5e');
+      drawPaddle(ctx, playerRef.current.x, playerRef.current.y, 30, '#3b82f6');
+      drawPaddle(ctx, computerRef.current.x, computerRef.current.y, 30, '#ef4444');
       drawPuck(ctx);
       animationIdRef.current = requestAnimationFrame(render);
     };
