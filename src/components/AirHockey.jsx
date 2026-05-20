@@ -6,7 +6,6 @@ const CANVAS_HEIGHT = 400;
 const GOAL_HALF_HEIGHT = 70;
 const FRICTION = 0.99;
 const MIN_SPEED = 1.5;
-const MAX_SPEED = 14;
 
 const collidePuckWithPaddle = (puck, paddle) => {
   const dx = puck.x - paddle.x;
@@ -29,6 +28,13 @@ const collidePuckWithPaddle = (puck, paddle) => {
   }
 };
 
+const DIFFICULTY_CONFIGS = {
+  easy: { aiSpeed: 2.5, maxSpeed: 11, label: 'Легко', color: '#10b981', desc: 'Для расслабленной игры' },
+  medium: { aiSpeed: 4.5, maxSpeed: 14, label: 'Нормально', color: '#3b82f6', desc: 'Стандартный вызов' },
+  hard: { aiSpeed: 7.0, maxSpeed: 17, label: 'Сложно', color: '#f97316', desc: 'Агрессивный соперник' },
+  insane: { aiSpeed: 10.0, maxSpeed: 21, label: 'Ультра', color: '#a855f7', desc: 'Безумная скорость' }
+};
+
 const AirHockey = () => {
   const canvasRef = useRef(null);
   const playerRef = useRef({ x: 50, y: CANVAS_HEIGHT / 2, radius: 30, prevX: 50, prevY: CANVAS_HEIGHT / 2, vx: 0, vy: 0 });
@@ -37,23 +43,79 @@ const AirHockey = () => {
   const animationIdRef = useRef(null);
   const [playerScore, setPlayerScore] = useState(0);
   const [computerScore, setComputerScore] = useState(0);
-  const pausedRef = useRef(false);
-  const AI_SPEED = 4;
+  const pausedRef = useRef(true);
+  const [difficulty, setDifficulty] = useState(null);
+  const difficultyRef = useRef(null);
+  const aiSpeedRef = useRef(4);
+  const maxSpeedRef = useRef(14);
+  const [isPointerLocked, setIsPointerLocked] = useState(false);
+  const isPointerLockedRef = useRef(false);
 
   const targetRef = useRef({ x: 50, y: CANVAS_HEIGHT / 2 });
 
+  const selectDifficulty = (level) => {
+    const config = DIFFICULTY_CONFIGS[level];
+    if (config) {
+      aiSpeedRef.current = config.aiSpeed;
+      maxSpeedRef.current = config.maxSpeed;
+      difficultyRef.current = level;
+      setDifficulty(level);
+      resetRound();
+      
+      try {
+        canvasRef.current?.requestPointerLock?.();
+      } catch (err) {
+        console.error('Failed to request pointer lock:', err);
+      }
+    }
+  };
+
+  const changeDifficulty = () => {
+    difficultyRef.current = null;
+    setDifficulty(null);
+    setPlayerScore(0);
+    setComputerScore(0);
+    puckRef.current.x = CANVAS_WIDTH / 2;
+    puckRef.current.y = CANVAS_HEIGHT / 2;
+    puckRef.current.vx = 4;
+    puckRef.current.vy = 3;
+    playerRef.current.x = 50;
+    playerRef.current.y = CANVAS_HEIGHT / 2;
+    computerRef.current.x = CANVAS_WIDTH - 50;
+    computerRef.current.y = CANVAS_HEIGHT / 2;
+    pausedRef.current = true;
+
+    if (document.pointerLockElement === canvasRef.current) {
+      document.exitPointerLock?.();
+    }
+  };
+
+  const handleCanvasClick = () => {
+    if (difficultyRef.current !== null && document.pointerLockElement !== canvasRef.current) {
+      canvasRef.current?.requestPointerLock?.();
+    }
+  };
+
   const handleMouseMove = useCallback((e) => {
+    if (difficultyRef.current === null) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
     const scaleX = CANVAS_WIDTH / rect.width;
     const scaleY = CANVAS_HEIGHT / rect.height;
 
-    targetRef.current.x = (e.clientX - rect.left) * scaleX;
-    targetRef.current.y = (e.clientY - rect.top) * scaleY;
+    if (isPointerLockedRef.current) {
+      const r = playerRef.current.radius;
+      targetRef.current.x = Math.max(r, Math.min(CANVAS_WIDTH / 2 - r, targetRef.current.x + e.movementX * scaleX));
+      targetRef.current.y = Math.max(r, Math.min(CANVAS_HEIGHT - r, targetRef.current.y + e.movementY * scaleY));
+    } else {
+      targetRef.current.x = (e.clientX - rect.left) * scaleX;
+      targetRef.current.y = (e.clientY - rect.top) * scaleY;
+    }
   }, []);
 
   const handleTouchMove = useCallback((e) => {
+    if (difficultyRef.current === null) return;
     const touch = e.touches[0];
     handleMouseMove({ clientX: touch.clientX, clientY: touch.clientY });
   }, [handleMouseMove]);
@@ -77,8 +139,9 @@ const AirHockey = () => {
   const clampSpeed = (vx, vy) => {
     const speed = Math.hypot(vx, vy);
     if (speed === 0) return { vx: MIN_SPEED, vy: 0 };
-    if (speed > MAX_SPEED) {
-      const ratio = MAX_SPEED / speed;
+    const currentMax = maxSpeedRef.current;
+    if (speed > currentMax) {
+      const ratio = currentMax / speed;
       return { vx: vx * ratio, vy: vy * ratio };
     }
     if (speed < MIN_SPEED) {
@@ -178,12 +241,13 @@ const AirHockey = () => {
       targetY = CANVAS_HEIGHT / 2;
     }
 
+    const currentAiSpeed = aiSpeedRef.current;
     const dy = targetY - comp.y;
-    const stepY = Math.min(Math.abs(dy), AI_SPEED) * Math.sign(dy);
+    const stepY = Math.min(Math.abs(dy), currentAiSpeed) * Math.sign(dy);
     comp.y += stepY;
 
     const dx = targetX - comp.x;
-    const stepX = Math.min(Math.abs(dx), AI_SPEED) * Math.sign(dx);
+    const stepX = Math.min(Math.abs(dx), currentAiSpeed) * Math.sign(dx);
     comp.x += stepX;
 
     comp.y = Math.max(r, Math.min(CANVAS_HEIGHT - r, comp.y));
@@ -280,15 +344,26 @@ const AirHockey = () => {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas?.getContext?.('2d');
+    if (!ctx) return;
 
     canvas.width = CANVAS_WIDTH;
     canvas.height = CANVAS_HEIGHT;
 
+    const handleLockChange = () => {
+      const locked = document.pointerLockElement === canvas;
+      setIsPointerLocked(locked);
+      isPointerLockedRef.current = locked;
+    };
+
+    document.addEventListener('pointerlockchange', handleLockChange);
+
     const render = () => {
-      updatePlayer();
-      updatePuck();
-      updateComputer();
+      if (difficultyRef.current !== null) {
+        updatePlayer();
+        updatePuck();
+        updateComputer();
+      }
       drawTable(ctx);
       drawPaddle(ctx, playerRef.current.x, playerRef.current.y, 30, '#3b82f6');
       drawPaddle(ctx, computerRef.current.x, computerRef.current.y, 30, '#ef4444');
@@ -305,6 +380,7 @@ const AirHockey = () => {
       cancelAnimationFrame(animationIdRef.current);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('pointerlockchange', handleLockChange);
     };
   }, [handleMouseMove, handleTouchMove, updatePlayer, updatePuck, updateComputer]);
 
@@ -312,11 +388,65 @@ const AirHockey = () => {
     <div className="game-container">
       <div className="score-board">
         <div className="player-score">{playerScore}</div>
-        <div className="score-divider">VS</div>
+        <div className="score-divider">
+          {difficulty ? (
+            <span className="active-difficulty" style={{ color: DIFFICULTY_CONFIGS[difficulty].color }}>
+              {DIFFICULTY_CONFIGS[difficulty].label}
+            </span>
+          ) : (
+            'VS'
+          )}
+        </div>
         <div className="computer-score">{computerScore}</div>
       </div>
-      <canvas ref={canvasRef} className="game-canvas" />
-      <div className="controls-hint">Двигай мышкой по левой половине поля</div>
+
+      <div className="canvas-wrapper">
+        <canvas ref={canvasRef} className="game-canvas" onClick={handleCanvasClick} />
+        
+        {!difficulty && (
+          <div className="difficulty-overlay">
+            <h2 className="overlay-title">ВЫБЕРИТЕ СЛОЖНОСТЬ</h2>
+            <p className="overlay-subtitle">Испытайте свои рефлексы в величайшем аэрохоккее</p>
+            <div className="difficulty-grid">
+              {Object.entries(DIFFICULTY_CONFIGS).map(([key, config]) => (
+                <button
+                  key={key}
+                  className={`difficulty-card card-${key}`}
+                  onClick={() => selectDifficulty(key)}
+                >
+                  <span className="card-dot" style={{ backgroundColor: config.color }}></span>
+                  <span className="card-label">{config.label}</span>
+                  <span className="card-desc">{config.desc}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {difficulty && !isPointerLocked && (
+          <div className="lock-overlay" onClick={handleCanvasClick}>
+            <div className="lock-overlay-content">
+              <h3>КЛИКНИТЕ ДЛЯ УПРАВЛЕНИЯ</h3>
+              <p>Курсор заблокируется внутри поля, чтобы управление не терялось при резких движениях</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {difficulty ? (
+        <div className="game-footer">
+          <div className="controls-hint">
+            {isPointerLocked
+              ? 'Двигай мышкой по левой половине поля • Нажмите Esc для выхода'
+              : 'Кликните по полю, чтобы заблокировать мышь и продолжить игру'}
+          </div>
+          <button className="change-difficulty-btn" onClick={changeDifficulty}>
+            Сменить сложность
+          </button>
+        </div>
+      ) : (
+        <div className="controls-hint">Выберите уровень сложности для начала игры</div>
+      )}
     </div>
   );
 };
