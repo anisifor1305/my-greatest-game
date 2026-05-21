@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Greatest Game Offline",
+  "version": "0.1.0",
+  "description": "Opens Greatest Game when a page fails to load without internet.",
+  "permissions": [
+    "tabs",
+    "webRequest"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "greatest-game-offline@local.dev"
+    }
+  }
+}
