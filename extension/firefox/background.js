@@ -1,5 +1,7 @@
 const GAME_PAGE_PATH = "game/index.html";
 const EXTENSION_ROOT_URL = browser.runtime.getURL("");
+const REDIRECT_COOLDOWN_MS = 1500;
+const recentlyRedirectedTabs = new Map();
 const OFFLINE_ERROR_PATTERNS = [
   "NS_ERROR_NET_",
   "NS_ERROR_UNKNOWN_HOST",
@@ -12,12 +14,26 @@ const OFFLINE_ERROR_PATTERNS = [
   "ERR_CONNECTION_TIMED_OUT"
 ];
 
+const isSupportedPageUrl = (url) => {
+  try {
+    const { protocol } = new URL(url);
+    return protocol === "http:" || protocol === "https:";
+  } catch {
+    return false;
+  }
+};
+
 const isOfflineNavigation = (details) => {
   if (details.tabId < 0 || details.type !== "main_frame") {
     return false;
   }
 
-  if (details.url.startsWith(EXTENSION_ROOT_URL)) {
+  if (details.url.startsWith(EXTENSION_ROOT_URL) || !isSupportedPageUrl(details.url)) {
+    return false;
+  }
+
+  const lastRedirectAt = recentlyRedirectedTabs.get(details.tabId) || 0;
+  if (Date.now() - lastRedirectAt < REDIRECT_COOLDOWN_MS) {
     return false;
   }
 
@@ -28,8 +44,15 @@ const isOfflineNavigation = (details) => {
 const buildGameUrl = (details) => {
   const gameUrl = new URL(browser.runtime.getURL(GAME_PAGE_PATH));
   gameUrl.searchParams.set("from", details.url);
-  gameUrl.searchParams.set("error", details.error);
+  gameUrl.searchParams.set("error", details.error || "NETWORK_ERROR");
   return gameUrl.toString();
+};
+
+const markTabRedirected = (tabId) => {
+  recentlyRedirectedTabs.set(tabId, Date.now());
+  setTimeout(() => {
+    recentlyRedirectedTabs.delete(tabId);
+  }, REDIRECT_COOLDOWN_MS);
 };
 
 browser.webRequest.onErrorOccurred.addListener(
@@ -37,6 +60,8 @@ browser.webRequest.onErrorOccurred.addListener(
     if (!isOfflineNavigation(details)) {
       return;
     }
+
+    markTabRedirected(details.tabId);
 
     browser.tabs.update(details.tabId, {
       url: buildGameUrl(details)
@@ -52,3 +77,7 @@ browser.webRequest.onErrorOccurred.addListener(
     ]
   }
 );
+
+browser.tabs.onRemoved.addListener((tabId) => {
+  recentlyRedirectedTabs.delete(tabId);
+});
