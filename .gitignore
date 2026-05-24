@@ -10,6 +10,8 @@
 
 # production
 /build
+/extension/firefox/game
+/extension/*.zip
 
 # misc
 .DS_Store
