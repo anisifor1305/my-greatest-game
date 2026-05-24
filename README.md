@@ -1,70 +1,133 @@
-# Getting Started with Create React App
+# Greatest Game Offline
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Аэрохоккей, который открывается в Firefox, когда интернет решил закончиться.
 
-## Available Scripts
+Я решил полностью отказаться от Windows и перейти на более каноничный open-source путь: Firefox, Linux-way мышление, вот это все. И тут внезапно обнаружилась очень грустная ситуация: когда интернета нет, браузер обычно показывает просто ошибку. Никакого тебе маленького ритуала ожидания, никакой мини-игры, никакой возможности занять руки на пару минут.
 
-In the project directory, you can run:
+А так как проблемы с интернетом в последнее время стали случаться чаще, я решил сделать себе нормальный offline fallback: если страница не загрузилась из-за сетевой ошибки, Firefox открывает локальную страницу расширения с величайшим аэрохоккеем.
 
-### `npm start`
+## Какая работа с Git была проведена
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- Работа велась в отдельной feature-ветке, чтобы не тащить эксперимент с расширением напрямую в `main`.
+- Изменения разбивались на небольшие осмысленные коммиты: подготовка React-сборки, оболочка Firefox-расширения, build pipeline, поведение offline fallback.
+- Документация была вынесена отдельно, чтобы README не смешивался с функциональной частью.
+- Для временного README-черновика использовался `git stash`: это позволило спокойно смержить код расширения, а потом вернуться к документации.
+- Функциональная часть проходила через pull request, поэтому перед слиянием было понятно, какие именно изменения попадают в основную ветку.
+- В итоге история проекта осталась читаемой: по коммитам видно, что и зачем добавлялось, а не просто один большой архив изменений.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Как выглядит
 
-### `npm test`
+Старт игры:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+![Стартовый экран Greatest Game](docs/screenshots/game-start.png)
 
-### `npm run build`
+Когда сайт не открылся:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+![Offline fallback с кнопкой повторить](docs/screenshots/offline-fallback.png)
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Что это такое
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Greatest Game Offline — это Firefox WebExtension вокруг React-игры.
 
-### `npm run eject`
+Расширение слушает ошибки основной навигации через `webRequest.onErrorOccurred`. Если вкладка пыталась открыть обычную `http` или `https` страницу и Firefox получил сетевую ошибку, расширение перенаправляет эту вкладку на локальную страницу:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```text
+extension/firefox/game/index.html
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Игра получает исходный адрес через query-параметр, показывает домен сверху и дает кнопку `Попробовать снова`. Когда интернет вернулся, кнопка отправит вкладку обратно на сайт, который изначально не открылся.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## Установка для локальной разработки
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Сначала установите зависимости:
 
-## Learn More
+```bash
+npm install
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Соберите игру внутрь папки расширения:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```bash
+npm run build:firefox-extension
+```
 
-### Code Splitting
+Откройте в Firefox:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```text
+about:debugging#/runtime/this-firefox
+```
 
-### Analyzing the Bundle Size
+Дальше:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+1. Нажмите `Load Temporary Add-on...`.
+2. Выберите файл `extension/firefox/manifest.json`.
+3. Отключите интернет.
+4. Попробуйте открыть любой сайт, например `https://example.com`.
 
-### Making a Progressive Web App
+Если Firefox получит сетевую ошибку при загрузке основной страницы, вкладку должно перекинуть на игру.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+Важно: для локальной загрузки выбирается именно `extension/firefox/manifest.json`, не zip-архив.
 
-### Advanced Configuration
+## Упаковка
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+Собрать zip-архив расширения:
 
-### Deployment
+```bash
+npm run package:firefox-extension
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+Архив появится здесь:
 
-### `npm run build` fails to minify
+```text
+extension/greatest-game-firefox.zip
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Он нужен для упаковки и дальнейшего распространения. Для обычного локального теста через `about:debugging` удобнее грузить manifest напрямую.
+
+## Команды
+
+```bash
+npm start
+```
+
+Запускает React-приложение в dev-режиме.
+
+```bash
+npm run build
+```
+
+Собирает обычный production build в `build/`.
+
+```bash
+npm run build:firefox-extension
+```
+
+Собирает React и копирует результат в `extension/firefox/game/`.
+
+```bash
+npm run package:firefox-extension
+```
+
+Собирает расширение и упаковывает его в zip.
+
+```bash
+npm test -- --watchAll=false
+```
+
+Запускает тесты один раз.
+
+## Как работает внутри
+
+- `src/components/AirHockey.jsx` — сама игра.
+- `extension/firefox/manifest.json` — manifest расширения для Firefox.
+- `extension/firefox/background.js` — background-скрипт, который ловит сетевые ошибки и открывает игру.
+- `scripts/firefox-extension.js` — build/package pipeline без дополнительных npm-зависимостей.
+- `docs/screenshots/` — скриншоты для README.
+
+Технически идея простая: расширение реагирует на сетевую ошибку при открытии страницы и вместо пустого разочарования показывает локально собранную игру. Внутрь игры передается адрес сайта, который не открылся, поэтому сверху есть кнопка `Попробовать снова`. Еще есть базовая защита от повторных редиректов, чтобы расширение вело себя спокойно.
+
+## Ограничения
+
+Это расширение не заменяет встроенную страницу Firefox `about:neterror` напрямую. Оно реагирует на сетевую ошибку основной навигации и после этого перенаправляет вкладку на локальную страницу игры.
+
+Firefox-версия сейчас использует такой формат manifest, который стабильно грузится локально через `about:debugging` и подходит под текущий сценарий с `webRequest`. В детали версий manifest глубоко не ухожу: для этого проекта важнее, чтобы расширение понятно собиралось, запускалось и делало свою работу.
