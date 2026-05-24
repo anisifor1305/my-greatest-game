@@ -255,20 +255,20 @@ const AirHockey = () => {
     comp.prevX = comp.x;
     comp.prevY = comp.y;
 
+    const puckOnComputerSide = puck.x > CANVAS_WIDTH / 2;
+    const puckThreatensComputer = puck.vx > 0 || puckOnComputerSide;
     let targetX = CANVAS_WIDTH - 50;
-    let targetY;
+    let targetY = CANVAS_HEIGHT / 2;
 
-    if (puck.vx > 0) {
+    if (puckThreatensComputer) {
       targetY = puck.y;
-      if (puck.x > CANVAS_WIDTH / 2) {
-        if (puck.vx < 4) {
+      if (puckOnComputerSide) {
+        if (Math.abs(puck.vx) < 4) {
           targetX = puck.x;
         } else if (puck.x > CANVAS_WIDTH - 120) {
           targetX = puck.x;
         }
       }
-    } else {
-      targetY = CANVAS_HEIGHT / 2;
     }
 
     const currentAiSpeed = aiSpeedRef.current;
