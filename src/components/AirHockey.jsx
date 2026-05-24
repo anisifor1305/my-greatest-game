@@ -35,6 +35,25 @@ const DIFFICULTY_CONFIGS = {
   insane: { aiSpeed: 10.0, maxSpeed: 21, label: 'Ультра', color: '#a855f7', desc: 'Безумная скорость' }
 };
 
+const getOfflineFallback = () => {
+  const params = new URLSearchParams(window.location.search);
+  const from = params.get('from');
+  if (!from) return null;
+
+  try {
+    const url = new URL(from);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+
+    return {
+      url: url.toString(),
+      host: url.host,
+      error: params.get('error') || 'NETWORK_ERROR'
+    };
+  } catch {
+    return null;
+  }
+};
+
 const AirHockey = () => {
   const canvasRef = useRef(null);
   const playerRef = useRef({ x: 50, y: CANVAS_HEIGHT / 2, radius: 30, prevX: 50, prevY: CANVAS_HEIGHT / 2, vx: 0, vy: 0 });
@@ -50,8 +69,19 @@ const AirHockey = () => {
   const maxSpeedRef = useRef(14);
   const [isPointerLocked, setIsPointerLocked] = useState(false);
   const isPointerLockedRef = useRef(false);
+  const [offlineFallback] = useState(getOfflineFallback);
 
   const targetRef = useRef({ x: 50, y: CANVAS_HEIGHT / 2 });
+
+  const retryOriginalPage = () => {
+    if (!offlineFallback) return;
+
+    if (document.pointerLockElement === canvasRef.current) {
+      document.exitPointerLock?.();
+    }
+
+    window.location.assign(offlineFallback.url);
+  };
 
   const selectDifficulty = (level) => {
     const config = DIFFICULTY_CONFIGS[level];
@@ -386,6 +416,18 @@ const AirHockey = () => {
 
   return (
     <div className="game-container">
+      {offlineFallback && (
+        <div className="offline-panel">
+          <div className="offline-copy">
+            <div className="offline-label">Сеть не ответила</div>
+            <div className="offline-url" title={offlineFallback.url}>{offlineFallback.host}</div>
+          </div>
+          <button className="retry-page-btn" onClick={retryOriginalPage}>
+            Попробовать снова
+          </button>
+        </div>
+      )}
+
       <div className="score-board">
         <div className="player-score">{playerScore}</div>
         <div className="score-divider">

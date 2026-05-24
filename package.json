@@ -16,6 +16,8 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "build:firefox-extension": "node scripts/firefox-extension.js build",
+    "package:firefox-extension": "node scripts/firefox-extension.js package",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
