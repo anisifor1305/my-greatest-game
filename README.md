@@ -18,11 +18,11 @@
 
 ## Как выглядит
 
-Старт игры:
+Запуск расширения, когда сайт не открылся:
 
 ![Стартовый экран Greatest Game](docs/screenshots/game-start.png)
 
-Когда сайт не открылся:
+Процесс игры:
 
 ![Offline fallback с кнопкой повторить](docs/screenshots/offline-fallback.png)
 
